@@ -1,0 +1,42 @@
+name: did lint and coverage test
+
+on:
+  push:
+    branches: 
+      - master
+      - GA
+  pull_request:
+    branches: 
+      - master
+      - GA
+
+jobs:
+  ubuntu_build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9, 3.10-dev]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Coverage test
+      run: |
+        sudo apt install libkrb5-dev
+        pip install -e .[all]
+        pip install pytest python-coveralls
+        coverage run --source=bin,did -m py.test tests
+
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        flake8 bin did tests --count --show-source --statistics
+
